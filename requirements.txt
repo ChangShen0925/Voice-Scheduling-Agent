@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+jinja2
+python-multipart
+openai>=1.40.0
+google-auth
+google-auth-oauthlib
+google-api-python-client
+itsdangerous

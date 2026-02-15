@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scheduling Agent — Voice</title>
+  <style>
+    :root{
+      --bg: #0b0f17;
+      --panel: rgba(255,255,255,0.06);
+      --panel-2: rgba(255,255,255,0.08);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.60);
+      --border: rgba(255,255,255,0.10);
+      --shadow: 0 14px 40px rgba(0,0,0,0.45);
+      --accent: #2b6cff;
+      --good: #22c55e;
+      --warn: #f59e0b;
+
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background: radial-gradient(1200px 700px at 20% 0%, rgba(43,108,255,0.18), transparent 55%),
+                  radial-gradient(900px 600px at 80% 20%, rgba(125,211,252,0.14), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      padding:22px;
+    }
+
+    .app{
+      width:min(980px,100%);
+      height:min(88vh, 900px);
+      background: linear-gradient(180deg, var(--panel), transparent 120%);
+      border:1px solid var(--border);
+      border-radius: calc(var(--radius) + 6px);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:grid;
+      grid-template-rows:auto 1fr auto;
+      backdrop-filter: blur(12px);
+    }
+
+    .topbar{
+      padding:16px 18px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      background: linear-gradient(180deg, var(--panel-2), transparent);
+    }
+
+    .brand{display:flex;align-items:center;gap:12px;min-width:0}
+    .logo{
+      width:36px;height:36px;border-radius:12px;
+      background:
+        radial-gradient(16px 16px at 30% 30%, rgba(255,255,255,0.55), transparent 60%),
+        linear-gradient(135deg, rgba(43,108,255,0.95), rgba(125,211,252,0.85));
+      border:1px solid rgba(255,255,255,0.18);
+      flex:0 0 auto;
+    }
+    .title{font-weight:700;font-size:15px;line-height:1.1}
+    .subtitle{margin-top:2px;font-size:12px;color:var(--muted)}
+
+    .pill{
+      font-size:12px;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      color:var(--muted);
+      background: rgba(255,255,255,0.04);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .dot{
+      width:7px;height:7px;border-radius:999px;background:var(--good);
+      box-shadow:0 0 0 4px rgba(34,197,94,0.12);
+    }
+
+    .chat{
+      padding:18px;
+      overflow:auto;
+      background:
+        radial-gradient(700px 380px at 50% -10%, rgba(255,255,255,0.06), transparent 60%),
+        transparent;
+    }
+
+    .msg{
+      display:grid;
+      grid-template-columns: 42px 1fr;
+      gap:10px;
+      margin:12px 0;
+      align-items:flex-start;
+    }
+    .msg.user{grid-template-columns: 1fr 42px;}
+    .avatar{
+      width:42px;height:42px;border-radius:16px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      display:grid;place-items:center;
+      color:var(--muted);font-size:12px;
+    }
+    .avatar.ai{
+      background:
+        radial-gradient(12px 12px at 30% 30%, rgba(255,255,255,0.55), transparent 70%),
+        rgba(255,255,255,0.06);
+    }
+    .bubble{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding:12px 12px;
+      line-height:1.45;
+      white-space:pre-wrap;
+      word-wrap:break-word;
+      font-size:14px;
+    }
+    .user .bubble{
+      background: linear-gradient(135deg, rgba(43,108,255,0.95), rgba(43,108,255,0.70));
+      border-color: rgba(43,108,255,0.55);
+      color:#fff;
+    }
+    .meta{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:11px;
+      padding:0 2px;
+    }
+
+    .bottom{
+      border-top:1px solid var(--border);
+      padding:14px;
+      background: linear-gradient(180deg, transparent, var(--panel-2));
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+
+    .controls{
+      display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+    }
+
+    .holdBtn{
+      appearance:none;border:none;cursor:pointer;
+      border-radius: 999px;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.08);
+      border:1px solid var(--border);
+      color:var(--text);
+      font-size:14px;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      transition: transform .06s ease, background .16s ease, border-color .16s ease;
+      user-select:none;
+    }
+    .holdBtn:hover{background: rgba(255,255,255,0.12);}
+    .holdBtn:active{transform: translateY(1px);}
+
+    .mic{
+      width:14px;height:14px;border-radius:4px;
+      background: var(--accent);
+      box-shadow: 0 0 0 6px rgba(43,108,255,0.14);
+    }
+
+    .holdBtn.recording{
+      background: linear-gradient(135deg, rgba(245,158,11,0.95), rgba(245,158,11,0.65));
+      border-color: rgba(245,158,11,0.55);
+    }
+    .holdBtn.recording .mic{
+      background:#fff;
+      box-shadow: 0 0 0 6px rgba(255,255,255,0.18);
+    }
+
+    .textRow{
+      flex:1;
+      min-width: 260px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    input[type="text"]{
+      width:100%;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 12px 12px;
+      color:var(--text);
+      outline:none;
+      font-size:14px;
+    }
+    .sendBtn{
+      border:1px solid rgba(43,108,255,0.55);
+      background: linear-gradient(135deg, rgba(43,108,255,0.95), rgba(43,108,255,0.70));
+      color:#fff;
+      border-radius: 14px;
+      padding: 12px 14px;
+      cursor:pointer;
+      font-size:14px;
+    }
+
+    .hint{
+      color:var(--muted);
+      font-size:12px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .kbd{
+      font-family: var(--mono);
+      font-size:11px;
+      border:1px solid var(--border);
+      padding:6px 8px;
+      border-radius:12px;
+      background: rgba(255,255,255,0.04);
+      color:var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <div class="title">Scheduling Agent</div>
+          <div class="subtitle">Voice (hold to talk) • streaming reply + streaming TTS</div>
+        </div>
+      </div>
+      <div class="pill" id="statusPill"><span class="dot"></span><span id="statusText">Ready</span></div>
+    </div>
+
+    <div class="chat" id="chat"></div>
+
+    <div class="bottom">
+      <div class="controls">
+        <button class="holdBtn" id="holdBtn">
+          <span class="mic"></span>
+          <span id="holdLabel">Hold to Talk</span>
+        </button>
+
+        <div class="hint">
+          <span class="kbd">Hold</span> speak, release to send
+          <span class="kbd">Enter</span> send text
+        </div>
+      </div>
+
+      <div class="textRow">
+        <input id="textIn" type="text" placeholder="Or type here…" />
+        <button class="sendBtn" id="sendText">Send</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const chatEl = document.getElementById("chat");
+  const statusText = document.getElementById("statusText");
+
+  const holdBtn = document.getElementById("holdBtn");
+  const holdLabel = document.getElementById("holdLabel");
+  const textIn = document.getElementById("textIn");
+  const sendTextBtn = document.getElementById("sendText");
+
+  let messages = [];
+  let mediaRecorder = null;
+  let chunks = [];
+  let isRecording = false;
+
+  function nowTime(){
+    const d = new Date();
+    return d.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+  }
+
+  function setStatus(s){ statusText.textContent = s; }
+
+  function scrollBottom(){ chatEl.scrollTop = chatEl.scrollHeight; }
+
+  function addMsg(role, text){
+    const wrap = document.createElement("div");
+    wrap.className = "msg " + (role === "user" ? "user" : "ai");
+
+    if(role === "user"){
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = text;
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      meta.textContent = nowTime();
+
+      const right = document.createElement("div");
+      right.appendChild(bubble);
+      right.appendChild(meta);
+
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      avatar.textContent = "You";
+
+      wrap.appendChild(right);
+      wrap.appendChild(avatar);
+    }else{
+      const avatar = document.createElement("div");
+      avatar.className = "avatar ai";
+      avatar.textContent = "AI";
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = text;
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      meta.textContent = nowTime();
+
+      const left = document.createElement("div");
+      left.appendChild(bubble);
+      left.appendChild(meta);
+
+      wrap.appendChild(avatar);
+      wrap.appendChild(left);
+
+      // return bubble so we can stream into it
+      wrap._bubble = bubble;
+    }
+
+    chatEl.appendChild(wrap);
+    scrollBottom();
+    return wrap._bubble;
+  }
+
+  async function ensureMic(){
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    return stream;
+  }
+
+  async function startRecording(){
+    const stream = await ensureMic();
+    chunks = [];
+
+    // Try webm/opus first (works in Chrome)
+    const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+      ? "audio/webm;codecs=opus"
+      : "audio/webm";
+
+    mediaRecorder = new MediaRecorder(stream, { mimeType: mime });
+    mediaRecorder.ondataavailable = (e) => { if(e.data && e.data.size) chunks.push(e.data); };
+    mediaRecorder.start();
+
+    isRecording = true;
+    holdBtn.classList.add("recording");
+    holdLabel.textContent = "Recording… release to send";
+    setStatus("Listening…");
+  }
+
+  async function stopRecording(){
+    if(!mediaRecorder) return;
+    await new Promise((resolve) => {
+      mediaRecorder.onstop = resolve;
+      mediaRecorder.stop();
+    });
+
+    isRecording = false;
+    holdBtn.classList.remove("recording");
+    holdLabel.textContent = "Hold to Talk";
+    setStatus("Transcribing…");
+
+    const blob = new Blob(chunks, { type: mediaRecorder.mimeType || "audio/webm" });
+    chunks = [];
+
+    // 1) ASR
+    const fd = new FormData();
+    fd.append("audio", blob, "speech.webm");
+
+    let text = "";
+    try{
+      const r = await fetch("/api/asr", { method:"POST", body: fd });
+      const j = await r.json();
+      text = (j.text || "").trim();
+    }catch(e){
+      addMsg("ai", "⚠️ I couldn't transcribe that. Try again.");
+      setStatus("Ready");
+      return;
+    }
+
+    if(!text){
+      addMsg("ai", "I didn’t catch that. Want to try again?");
+      setStatus("Ready");
+      return;
+    }
+
+    await sendUserText(text, true);
+  }
+
+  // Streaming TTS via MediaSource (mp3 chunks)
+  async function playTTSStreaming(fullText){
+    if(!fullText || !fullText.trim()) return;
+
+    // MediaSource requires user gesture on some browsers; this runs after user action anyway.
+    const audio = new Audio();
+    audio.autoplay = true;
+
+    const ms = new MediaSource();
+    audio.src = URL.createObjectURL(ms);
+
+    ms.addEventListener("sourceopen", async () => {
+      const sb = ms.addSourceBuffer("audio/mpeg");
+
+      const resp = await fetch("/api/tts/stream", {
+        method:"POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ text: fullText })
+      });
+
+      const reader = resp.body.getReader();
+      while(true){
+        const { value, done } = await reader.read();
+        if(done) break;
+        if(value){
+          await new Promise((resolve) => {
+            sb.addEventListener("updateend", resolve, { once:true });
+            sb.appendBuffer(value);
+          });
+        }
+      }
+
+      ms.endOfStream();
+    });
+
+    // play
+    try { await audio.play(); } catch {}
+  }
+
+  async function sendUserText(text, fromVoice=false){
+    addMsg("user", fromVoice ? `(voice) ${text}` : text);
+    messages.push({ role:"user", content: text });
+
+    setStatus("Thinking…");
+
+    // Create an assistant bubble for streaming text
+    const bubble = addMsg("ai", "");
+    let finalText = "";
+
+    try{
+      const resp = await fetch("/api/voice/chat/stream", {
+        method:"POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ messages })
+      });
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+
+      while(true){
+        const { value, done } = await reader.read();
+        if(done) break;
+
+        buffer += decoder.decode(value, { stream:true });
+        const parts = buffer.split("\n\n");
+        buffer = parts.pop();
+
+        for(const part of parts){
+          const line = part.trim();
+          if(!line.startsWith("data:")) continue;
+          const jsonStr = line.replace(/^data:\s*/, "");
+          let obj;
+          try{ obj = JSON.parse(jsonStr); }catch{ continue; }
+
+          if(obj.type === "delta"){
+            finalText += obj.text;
+            bubble.textContent = finalText;
+            scrollBottom();
+          }
+          if(obj.type === "error"){
+            bubble.textContent = "⚠️ " + obj.message;
+          }
+        }
+      }
+
+      messages.push({ role:"assistant", content: finalText });
+      setStatus("Speaking…");
+
+      // Stream TTS
+      await playTTSStreaming(finalText);
+
+      setStatus("Ready");
+    }catch(e){
+      bubble.textContent = "⚠️ Failed to reach server: " + e;
+      setStatus("Error");
+    }
+  }
+
+  // Hold-to-talk handlers
+  holdBtn.addEventListener("mousedown", async () => {
+    if(isRecording) return;
+    try{ await startRecording(); }catch(e){ addMsg("ai", "⚠️ Microphone permission needed."); }
+  });
+  window.addEventListener("mouseup", async () => {
+    if(!isRecording) return;
+    await stopRecording();
+  });
+
+  // Mobile touch
+  holdBtn.addEventListener("touchstart", async (e) => {
+    e.preventDefault();
+    if(isRecording) return;
+    try{ await startRecording(); }catch(e2){ addMsg("ai", "⚠️ Microphone permission needed."); }
+  }, { passive:false });
+  holdBtn.addEventListener("touchend", async (e) => {
+    e.preventDefault();
+    if(!isRecording) return;
+    await stopRecording();
+  }, { passive:false });
+
+  // Text input
+  async function sendTyped(){
+    const t = (textIn.value || "").trim();
+    if(!t) return;
+    textIn.value = "";
+    await sendUserText(t, false);
+    textIn.focus();
+  }
+
+  sendTextBtn.addEventListener("click", sendTyped);
+  textIn.addEventListener("keydown", (e) => {
+    if(e.key === "Enter"){
+      e.preventDefault();
+      sendTyped();
+    }
+  });
+
+  // Initial greeting
+  (function init(){
+    const bubble = addMsg("ai", "Hey! I’m your scheduling assistant. Tell me what you want to book, and we’ll lock it in.");
+    messages.push({ role:"assistant", content: bubble.textContent });
+    setStatus("Ready");
+    textIn.focus();
+  })();
+</script>
+</body>
+</html>
