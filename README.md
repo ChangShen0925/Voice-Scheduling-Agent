@@ -196,7 +196,7 @@ Create a `.env` file in the project root:
 # =========================
 OPENAI_API_KEY=YOUR_OPENAI_KEY
 CHAT_MODEL=gpt-4.1-nano
-ASR_MODEL=whisper-1
+ASR_MODEL=gpt-4o-mini-transcribe
 
 # =========================
 # Google OAuth (Calendar API)

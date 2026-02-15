@@ -25,7 +25,7 @@ _sessions: Dict[str, Dict[str, Any]] = {}
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 CHAT_MODEL = os.getenv("CHAT_MODEL", "gpt-4.1-nano")
-ASR_MODEL = os.getenv("ASR_MODEL", "whisper-1")
+ASR_MODEL = os.getenv("ASR_MODEL", "gpt-4o-mini-transcribe")
 
 TZ_NAME = os.getenv("TZ_NAME", "America/Los_Angeles")
 CALENDAR_ID = os.getenv("CALENDAR_ID", "primary")
