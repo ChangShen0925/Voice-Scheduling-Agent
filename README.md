@@ -184,7 +184,6 @@ The agent will respond with:
 
 ### 1. Clone repository
 ```bash
-git clone <YOUR_REPO_URL>
 cd Voice-Scheduling-Agent
 ```
 
@@ -358,7 +357,6 @@ Voice-Scheduling-Agent/
 AI / ML Engineer  
 Melbourne, Australia  
 Email: sc2000925@gmail.com  
-GitHub: *(I will provide the repository link in the submission email)*
 
 ---
 
